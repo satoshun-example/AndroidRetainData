@@ -2,7 +2,6 @@ package com.github.satoshun.example.retain;
 
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,21 +15,21 @@ import com.github.satoshun.example.retain.databinding.MainItemBinding;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 
-public class MainActivity extends AppCompatActivity implements RetainFragment.DataCallback {
+public class MainActivity extends AppCompatActivity {
 
     private MainActBinding binding;
     private RepoAdapter repoAdapter;
     private CompositeDisposable disposables = new CompositeDisposable();
+    private RetainFragment dataFrag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.main_act);
 
-        RetainFragment dataFrag = (RetainFragment) getSupportFragmentManager().findFragmentByTag("data");
+        dataFrag = (RetainFragment) getSupportFragmentManager().findFragmentByTag("data");
         if (dataFrag == null) {
             dataFrag = RetainFragment.newInstance();
             getSupportFragmentManager()
@@ -43,20 +42,17 @@ public class MainActivity extends AppCompatActivity implements RetainFragment.Da
         binding.content.setLayoutManager(new LinearLayoutManager(this));
 
         binding.swipe.setOnRefreshListener(dataFrag::refresh);
-    }
 
-    @Override
-    public void onDataSource(Observable<List<Repo>> source) {
-        disposables.add(source.subscribe(
-                data -> {
-                    binding.swipe.setRefreshing(false);
-                    repoAdapter.addRepos(data);
-                },
-                e -> {
-                    binding.swipe.setRefreshing(false);
-                    Log.e("onDataSource", e.getMessage());
-                }
-        ));
+        disposables.add(dataFrag.observable()
+                .subscribe(
+                        data -> {
+                            binding.swipe.setRefreshing(false);
+                            repoAdapter.addRepos(data);
+                        },
+                        e -> {
+                            binding.swipe.setRefreshing(false);
+                            Log.e("onDataSource", e.getMessage());
+                        }));
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.github.satoshun.example.retain;
 
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
@@ -23,31 +22,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetainFragment extends Fragment {
 
-    public interface DataCallback {
-        void onDataSource(Observable<List<Repo>> source);
-    }
-
     public static RetainFragment newInstance() {
         return new RetainFragment();
     }
 
-    private DataCallback callback;
     private CompositeDisposable disposables = new CompositeDisposable();
     private Subject<List<Repo>> subject = BehaviorSubject.create();
 
     public RetainFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof DataCallback) {
-            callback = (DataCallback) context;
-        }
-        if (callback == null) {
-            throw new ClassCastException("implements DataCallback");
-        }
     }
 
     @Override
@@ -61,12 +44,10 @@ public class RetainFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        callback.onDataSource(subject.toSerialized());
     }
 
     @Override
     public void onDetach() {
-        callback = null;
         super.onDetach();
     }
 
@@ -74,6 +55,10 @@ public class RetainFragment extends Fragment {
     public void onDestroy() {
         disposables.dispose();
         super.onDestroy();
+    }
+
+    Observable<List<Repo>> observable() {
+        return subject;
     }
 
     void refresh() {
