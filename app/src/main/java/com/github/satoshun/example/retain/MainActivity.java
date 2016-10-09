@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements RetainFragment.Da
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.main_act);
 
-        Fragment dataFrag = getSupportFragmentManager().findFragmentByTag("data");
+        RetainFragment dataFrag = (RetainFragment) getSupportFragmentManager().findFragmentByTag("data");
         if (dataFrag == null) {
             dataFrag = RetainFragment.newInstance();
             getSupportFragmentManager()
@@ -41,13 +41,22 @@ public class MainActivity extends AppCompatActivity implements RetainFragment.Da
         repoAdapter = new RepoAdapter(LayoutInflater.from(this), new ArrayList<>());
         binding.content.setAdapter(repoAdapter);
         binding.content.setLayoutManager(new LinearLayoutManager(this));
+
+        binding.swipe.setOnRefreshListener(dataFrag::refresh);
     }
 
     @Override
     public void onDataSource(Observable<List<Repo>> source) {
         disposables.add(source.subscribe(
-                data -> repoAdapter.addRepos(data),
-                e -> Log.e("onDataSource", e.getMessage())));
+                data -> {
+                    binding.swipe.setRefreshing(false);
+                    repoAdapter.addRepos(data);
+                },
+                e -> {
+                    binding.swipe.setRefreshing(false);
+                    Log.e("onDataSource", e.getMessage());
+                }
+        ));
     }
 
     @Override

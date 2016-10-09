@@ -55,13 +55,7 @@ public class RetainFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
-        disposables.add(provideGithubAPI()
-                .getRepositories("satoshun")
-                .subscribeOn(Schedulers.computation())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        data -> subject.onNext(data),
-                        e -> subject.onError(e)));
+        refresh();
     }
 
     @Override
@@ -80,6 +74,17 @@ public class RetainFragment extends Fragment {
     public void onDestroy() {
         disposables.dispose();
         super.onDestroy();
+    }
+
+    void refresh() {
+        disposables.clear();
+        disposables.add(provideGithubAPI()
+                .getRepositories("satoshun")
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        data -> subject.onNext(data),
+                        e -> subject.onError(e)));
     }
 
     // TODO: Use DI like a Dagger2.
